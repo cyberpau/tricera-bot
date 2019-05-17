@@ -1,0 +1,85 @@
+<link rel="import" href="../bower_components/vaadin-lumo-styles/color.html">
+<link rel="import" href="../bower_components/vaadin-lumo-styles/typography.html">
+
+<custom-style>
+    <style include="view-styles">
+        html {
+            height: auto;
+            --main-layout-header-height: 64px;
+            background-color: transparent !important;
+        }
+
+        body {
+            /* Avoid horizontal scrollbars, mainly on IE11 */
+            overflow-x: hidden;
+            background-color: var(--lumo-contrast-5pct);
+        }
+
+        button {
+            align-content: center;
+            align-items: center;
+        }
+
+        .main-layout {
+            width: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        .main-layout__header {
+            align-items: center;
+            text-align: center;
+            height: var(--main-layout-header-height);
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 80px;
+            background-color: var(--lumo-base-color);
+            box-shadow: 0 1px 0 0 var(--lumo-contrast-5pct);
+        }
+
+        .main-layout__input {
+            width: 100%;
+            margin: 0;
+            padding: 10px;
+        }
+
+        .message-list {
+            overflow-y: scroll;
+            width: 100%;
+        }
+        
+        .bubble-profile {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 1px solid;
+        }
+
+        .chat-bubble__me {
+            margin: 10px;
+            padding: 10px;
+            height: auto;
+            background-color: var(--lumo-primary-color);
+            border-radius: 10px;
+            -webkit-text-fill-color: aliceblue;
+            align-content: flex-end;
+        }
+
+        .chat-bubble__others {
+            margin: 10px;
+            padding: 10px;
+            height: auto;
+            background-color: var(--lumo-contrast-20pct);
+            border-radius: 10px;
+            width: 80% auto;
+            align-items: flex-start;
+            
+        }
+
+        .main-layout__autobtn {
+            margin-right: 10px;
+        }
+
+    </style>
+</custom-style>
