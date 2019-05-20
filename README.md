@@ -1,5 +1,5 @@
 # tricera-bot
-Vaadin + Springboot Chatbot for 3C (Concern, Cause, Countermeasure) and Lesson Learn
+Tri-C.E.R.A stands for 3C (Concern, Cause, Countermeasure) Enhanced Roadblock Assistant. It is a web chat bot created using Vaadin 13 and Springboot, that supports machine learning and 3Cs / Lessons Learned prediction. It can be a stand alone service or a companion app of AIDE (https://github.com/rsx-labs/aide-frontend).
 
 
 ## Prerequisites
@@ -12,5 +12,5 @@ The project can be imported into the IDE of your choice, with Java 8 installed, 
 2. Wait for the application to start
 3. Open http://localhost:8080/ to view the application
 
-## AWS:
+## Sample deployed on AWS:
 http://tricerabot-env.eqeixe36nr.us-east-2.elasticbeanstalk.com/
