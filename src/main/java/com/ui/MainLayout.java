@@ -63,6 +63,7 @@ public class MainLayout extends VerticalLayout {
         Button btnSend = new Button("Send", new Icon(VaadinIcon.PAPERPLANE));
         btnSend.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         btnSend.addClickShortcut(Key.ENTER);
+        btnSend.addClassName("main-layout__btnDefaults");
         btnSend.addClickListener(click -> {
             request = messageField.getValue();
             processRequest();
@@ -71,6 +72,7 @@ public class MainLayout extends VerticalLayout {
         });
 
         Button btnClear = new Button(" ", new Icon(VaadinIcon.TRASH));
+        btnClear.addClassName("main-layout__btnDefaults");
         btnClear.addClickListener(click -> {
             messageLayout.removeAll();
         });

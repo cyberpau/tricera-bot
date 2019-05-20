@@ -20,6 +20,13 @@
             align-items: center;
         }
 
+        p {
+            display: -webkit-flex; /* Safari */
+            -webkit-flex-wrap: wrap; /* Safari 6.1+ */
+            display: flex;  
+            flex-wrap: wrap;
+        }
+
         .main-layout {
             width: 100%;
             margin: 0;
@@ -42,6 +49,8 @@
             width: 100%;
             margin: 0;
             padding: 10px;
+            margin-left: 4px;
+            min-width: 150px;
         }
 
         .message-list {
@@ -79,6 +88,11 @@
 
         .main-layout__autobtn {
             margin-right: 10px;
+        }
+
+        .main-layout__btnDefaults {
+            min-width: 50px;
+            margin: 4px;
         }
 
     </style>
