@@ -14,6 +14,7 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.page.Viewport;
 import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.PWA;
 
@@ -25,6 +26,7 @@ import com.vaadin.flow.server.PWA;
 @HtmlImport("frontend://styles/shared-styles.html")
 @PWA(name = "Tri-C.E.R.A", shortName = "tricera")
 @Viewport("width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes")
+@PageTitle("Tri-C.E.R.A.")
 public class MainLayout extends VerticalLayout {
     private String request = "";
     private String response = "";    
@@ -63,7 +65,6 @@ public class MainLayout extends VerticalLayout {
         Button btnSend = new Button("Send", new Icon(VaadinIcon.PAPERPLANE));
         btnSend.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         btnSend.addClickShortcut(Key.ENTER);
-        btnSend.addClassName("main-layout__btnDefaults");
         btnSend.addClickListener(click -> {
             request = messageField.getValue();
             processRequest();
@@ -82,7 +83,7 @@ public class MainLayout extends VerticalLayout {
     private void processRequest() {
         if (request.isEmpty()) return; // just in case to prevent spam
         response = engine.processRequest(request);
-        messageLayout.add(new Bubble(engine.getUsername(), request + " [" + engine.getRequestCode() + "]"));
+        messageLayout.add(new Bubble(engine.getUsername(), request + " [ 0x000" + engine.getRequestCode() + " ] "));
         if (!response.isEmpty()) messageLayout.add(new Bubble(".", response));
         reloadInputLayout(engine.getResponseCode());
     }
