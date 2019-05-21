@@ -82,7 +82,7 @@ public class MainLayout extends VerticalLayout {
     private void processRequest() {
         if (request.isEmpty()) return; // just in case to prevent spam
         response = engine.processRequest(request);
-        messageLayout.add(new Bubble(engine.getUsername(), request + "[" + engine.getRequestCode() + "]"));
+        messageLayout.add(new Bubble(engine.getUsername(), request + " [" + engine.getRequestCode() + "]"));
         if (!response.isEmpty()) messageLayout.add(new Bubble(".", response));
         reloadInputLayout(engine.getResponseCode());
     }
