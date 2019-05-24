@@ -6,11 +6,11 @@ phases:
       java: openjdk8
   build:
     commands:
-      - mvn package && mv target/*.war ROOT.war
+      - mvn package -Dvaadin.productionMode
   # post_build:
   #   commands:
   #     - echo Build completed on `date`
   #     - mvn package
 artifacts:
   files:
-    'ROOT.war'
+    '**/*'
