@@ -74,6 +74,11 @@
             <version>1.9.2</version>
             <type>jar</type>
         </dependency>
+        <dependency>
+            <groupId>com.microsoft.sqlserver</groupId>
+            <artifactId>mssql-jdbc</artifactId>
+            <version>6.1.0.jre8</version>
+        </dependency>
     </dependencies>
 
     <build>
