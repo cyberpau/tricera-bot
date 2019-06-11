@@ -1,3 +1,10 @@
+/* 
+
+This class encapsulates the Bubble Chat UI.
+
+Author: John Paulo Mataac (@cyberpau)
+*/
+
 package com.ui;
 
 import com.vaadin.flow.component.html.Image;
@@ -32,16 +39,6 @@ public class Bubble extends HorizontalLayout{
         }
         
 
-    }
-
-    private void delay(int delayInMilliseconds){
-        try {
-            Thread.sleep(delayInMilliseconds);
-        } catch (InterruptedException ie) {
-            
-        } catch (Exception e) {
-
-        }
     }
 
 }

@@ -1,16 +1,31 @@
+
+/* 
+
+This class encapsulates the Logic Flow / Response Tree 
+
+Author: John Paulo Mataac (@cyberpau)
+*/
+
 package com.core;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+
+import com.utilities.TriceraSQLUtils;
+import com.utilities.VaadinConnectionPool;
 import com.vaadin.flow.component.UI;
-import com.vaadin.flow.component.page.Page;
+import com.vaadin.flow.server.VaadinSession;
+
 
 public class TriceraEngine {
     private int requestCode = 0;
-    private int responseCode = 1;
+    private int responseCode = -1;
     private String username;
     private String response;
 
     // flags:
-    private boolean isOngoingConcernSearch = false;
+    private boolean isSearching = false;
     private boolean isRestarted = false;
 
     public TriceraEngine(){
@@ -42,73 +57,127 @@ public class TriceraEngine {
     }
 
 	public String processRequest(String request) {
+        RequestGenerator gen = new RequestGenerator(requestCode);
+        System.out.println("***********");
         // validate request here
         validate(request);
-
         response = "";
-        switch(requestCode){
-            case TriceraConstants.REQUESTCODE_ASK_USER:
-                username = request;
-                response = "Hello " + username + ", what can I do for you?";
-                responseCode = 48;
-                break;
-            case TriceraConstants.REQUESTCODE_SEARCH_3C:
-                if(!isOngoingConcernSearch){
-                    response = " Sure! Give me some keywords so I can check it in my 3C database.";
-                    responseCode = TriceraConstants.RESPONSECODE_TF;
-                    isOngoingConcernSearch = true;
-                } else {
-                    if(request.equalsIgnoreCase(TriceraConstants.CONST_YES)){
-                        response = "Great! I'm glad I could be of assistance.";
-                        responseCode = 48;
-                        isOngoingConcernSearch = false;
-                    } else if (request.equalsIgnoreCase(TriceraConstants.CONST_CANCEL)){
-                        response = "I still have remaining results found, but I guess this is the end for us </3";
-                        responseCode = 6;
-                        isOngoingConcernSearch = false;
-                    } else {
-                        // execute stored procedure here:
-                        response = "How about this? " + response;
+
+        if(requestCode < 0){
+            // Should go here if replied by: {"Yes", "No", "Cancel", "Maybe", "Modify", etc.}
+            switch (requestCode) {
+                case TriceraConstants.RESPONSECODE_TF:
+                    if(isSearching){
+                        Connection conn;
+                        PreparedStatement ps;
+                        ResultSet rs;
+
+                        String result = "";
+                        String sql = "SELECT * FROM freetexttable(dbo.LESSON_LEARNT, (problem_descr, solution_descr), ? , 5) as T" 
+                            + " join dbo.LESSON_LEARNT as LL on T.[KEY] = LL.ll_ref_no";
+
+                        try {
+                            conn = VaadinConnectionPool.getConnection();
+                            ps = conn.prepareStatement(sql);
+                            ps.setString(1, request);
+                            rs = ps.executeQuery();
+                            while(rs.next()){
+                                result = rs.getString(5);
+                            } 
+                        } catch (Exception e) {
+                            System.out.println(e.toString());
+                        }
+
+                        response += "Check this out! <BR/>" + result; // first response to query
+                        response += "<BR/> Did this help?";
                         responseCode = 14;
                     }
-                    
-                }
+                    break;
+
+                case TriceraConstants.RESPONSECODE_BTN_YES:
+                    if(isSearching){
+                        response = "Great! I'm glad I could be of assistance. Is there anything else I can do for you " + username + "?";
+                        responseCode = 6144;
+                        isSearching = false;
+                    }
+                    break;
+            
+                case TriceraConstants.RESPONSECODE_BTN_NO:
+                    if(isSearching){
+                        Connection conn;
+                        PreparedStatement ps;
+                        ResultSet rs;
+
+                        String result = "";
+                        String sql = "SELECT * FROM freetexttable(dbo.LESSON_LEARNT, (problem_descr, solution_descr), ? , 5) as T" 
+                            + " join dbo.LESSON_LEARNT as LL on T.[KEY] = LL.ll_ref_no";
+
+                        try {
+                            conn = VaadinConnectionPool.getConnection();
+                            ps = conn.prepareStatement(sql);
+                            ps.setString(1, request);
+                            rs = ps.executeQuery();
+                            while(rs.next()){
+                                result = rs.getString(5);
+                            } 
+                        } catch (Exception e) {
+                            System.out.println(e.toString());
+                        }
+                        response = "How about this? <BR/>" + result;
+                        responseCode = 14;
+                    }
+                    break;
+            
+                case TriceraConstants.REQUESTCODE_ERROR:
                 
-                break;
+                    break;
+                default:
+                    break;
+            }
+        } else {
+            // these are scalable generated buttons
+            switch(requestCode){
+                case TriceraConstants.REQUESTCODE_ASK_USER:
+                    username = request;
+                    TriceraSQLUtils util = new TriceraSQLUtils();
+                    util.insertUserSession(username);
+                    response = "Hello " + username + ", what can I do for you?";
+                    responseCode = gen.getResponseCode();
+                    break;
+                case TriceraConstants.REQUESTCODE_SEARCH:
+                    if(!isSearching){
+                        response = " Sure! Give me some keywords so I can check it in my 3C database.";
+                        responseCode = TriceraConstants.RESPONSECODE_TF;
+                        isSearching = true;
+                    }
+                    break;
+    
+                case TriceraConstants.REQUESTCODE_ERROR:
+                    if(isRestarted && (request.equalsIgnoreCase(TriceraConstants.CONST_OK))){
+                        UI.getCurrent().getPage().reload();
+                        response = "";
+                    }
+                    isRestarted = false;
+                    break;
 
-            case TriceraConstants.REQUESTCODE_RESTART:
-                if(isRestarted && (request.equalsIgnoreCase(TriceraConstants.CONST_YES))){
-                    UI.getCurrent().getPage().reload();
-                    response = "";
-                }
-                isRestarted = false;
-            default:
-                // do nothing...
-                response = "I'm dumb... Do you want to restart everything?";
-                requestCode = TriceraConstants.REQUESTCODE_RESTART;
-                responseCode = 6;
-                isRestarted = true;
-                break;
-
+                default:
+                    // do nothing...
+                    response = "I'm dumb... Do you want to restart everything?";
+                    response += VaadinSession.getCurrent().getSession().getId();
+                    requestCode = 8192;
+                    isRestarted = true;
+                    break;
+            }
         }
+        
         
 		return response;
     }
     
     private void validate(String request) {
-
+        System.out.println("validate(): request = " + request);
+        System.out.println("validate(): requestCode = " + requestCode);
     }
-
-    public String processRequest(String request, int code) {
-        // execute stored procedure here:
-        if (code == TriceraConstants.REQUESTCODE_ASK_USER){
-            // ask for username
-            this.username = request;
-            this.response = "Hello " + username + ", what can I do for you?";
-            this.responseCode = 2;
-        }
-		return request;
-	}
 
     /**
      * @return the response

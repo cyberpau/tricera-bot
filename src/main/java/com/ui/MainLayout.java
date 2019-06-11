@@ -1,5 +1,13 @@
+/* 
+
+This class contains the Main Layout of the Chat UI. 
+
+Author: John Paulo Mataac (@cyberpau)
+*/
+
 package com.ui;
 
+import com.core.RequestGenerator;
 import com.core.TriceraConstants;
 import com.core.TriceraEngine;
 import com.vaadin.flow.component.Key;
@@ -83,36 +91,36 @@ public class MainLayout extends VerticalLayout {
     private void processRequest() {
         if (request.isEmpty()) return; // just in case to prevent spam
         response = engine.processRequest(request);
-        messageLayout.add(new Bubble(engine.getUsername(), request + " [ 0x000" + engine.getRequestCode() + " ] "));
-        if (!response.isEmpty()) messageLayout.add(new Bubble(".", response));
+        messageLayout.add(new Bubble(engine.getUsername(), request));
+
+        String[] responseArray = response.split("<BR/>");
+        for(String reply : responseArray){
+            if (!response.isEmpty()) messageLayout.add(new Bubble(".", reply));
+        }
         reloadInputLayout(engine.getResponseCode());
     }
 
     private void reloadInputLayout(int responseCode) {
         inputLayout.removeAll();
+        RequestGenerator gen = new RequestGenerator();
+        Div generatedButtons = new Div();
+        System.out.println("responseCode: " + responseCode);
 
         if ((responseCode & TriceraConstants.RESPONSECODE_TF) == TriceraConstants.RESPONSECODE_TF){
+            engine.setRequestCode(TriceraConstants.RESPONSECODE_TF);
             messageField = new TextField();
             messageField.setClearButtonVisible(true);
             messageField.setWidth("100%");
             messageField.focus();
             inputLayout.add(messageField);
-        } else {
-            Div generatedButtons = new Div();
-            if ((responseCode & TriceraConstants.RESPONSECODE_BTN_YES) == TriceraConstants.RESPONSECODE_BTN_YES){
-                generatedButtons.add(createAutoReplyButton(TriceraConstants.CONST_YES));
-            }
-            if ((responseCode & TriceraConstants.RESPONSECODE_BTN_NO) == TriceraConstants.RESPONSECODE_BTN_NO){
-                generatedButtons.add(createAutoReplyButton(TriceraConstants.CONST_NO));
-            }
-            if ((responseCode & TriceraConstants.RESPONSECODE_BTN_CANCEL) == TriceraConstants.RESPONSECODE_BTN_CANCEL){
-                generatedButtons.add(createAutoReplyButton(TriceraConstants.CONST_CANCEL));
-            }
-            if ((responseCode & TriceraConstants.RESPONSECODE_BTN_3C) == TriceraConstants.RESPONSECODE_BTN_3C){
-                generatedButtons.add(createAutoReplyButton(TriceraConstants.CONST_HELP_CONCERN, TriceraConstants.REQUESTCODE_SEARCH_3C));
-            }
-            if ((responseCode & TriceraConstants.RESPONSECODE_BTN_LESSONLEARN) == TriceraConstants.RESPONSECODE_BTN_LESSONLEARN){
-                generatedButtons.add(createAutoReplyButton(TriceraConstants.CONST_ADD_LESSON, TriceraConstants.REQUESTCODE_ADD_LESSONLEARN));
+        } else if(responseCode != 0){
+            for(int value : gen.getAllRequestCode()){
+                if(value != 0 && (responseCode & value) == value){
+                    RequestGenerator btn = new RequestGenerator(value);
+                    int rc = (btn.getResponseCode() < 0) ? btn.getResponseCode() : btn.getRequestCode();
+                    System.out.println("Generating buttons... " + btn.getButtonName() + " : " + rc);
+                    generatedButtons.add(createAutoReplyButton(btn.getButtonName(), rc));
+                }
             }
             inputLayout.add(generatedButtons);
             inputLayout.expand(generatedButtons);
@@ -129,11 +137,6 @@ public class MainLayout extends VerticalLayout {
             processRequest();
         });
         return autoReply;
-    }
-
-    private Button createAutoReplyButton(String constYes) {
-        int rc = engine.getRequestCode();
-        return createAutoReplyButton(constYes, rc);
     }
 
     private void loadGreetings() {
