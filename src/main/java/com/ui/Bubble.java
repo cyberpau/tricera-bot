@@ -20,7 +20,6 @@ public class Bubble extends HorizontalLayout{
 
     public Bubble(String user, String message) {
         if(user.isEmpty()) return;
-        
 
         Image userProfile = new Image();
         userProfile.setClassName("bubble-profile");

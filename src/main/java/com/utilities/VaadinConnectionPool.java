@@ -8,7 +8,7 @@ import java.sql.SQLException;
 public class VaadinConnectionPool {
 
     private final static String driver = "com.microsoft.sqlserver.jdbc.SQLServerDriver";
-    private final static String path = "jdbc:sqlserver://localhost\\MSSQLSERVER;databaseName=tricera_db";
+    private final static String path = "jdbc:sqlserver://localhost\\MSSQLSERVER;databaseName=TriceraDB";
     private final static String user = "sa";
     private final static String pw = "Fuj123!";
     private static Connection conn;

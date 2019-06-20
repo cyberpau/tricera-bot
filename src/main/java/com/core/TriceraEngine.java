@@ -8,14 +8,10 @@ Author: John Paulo Mataac (@cyberpau)
 
 package com.core;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.utilities.TriceraSQLUtils;
-import com.utilities.VaadinConnectionPool;
-import com.vaadin.flow.component.UI;
-import com.vaadin.flow.server.VaadinSession;
 
 
 public class TriceraEngine {
@@ -23,10 +19,6 @@ public class TriceraEngine {
     private int responseCode = -1;
     private String username;
     private String response;
-
-    // flags:
-    private boolean isSearching = false;
-    private boolean isRestarted = false;
 
     public TriceraEngine(){
 
@@ -56,127 +48,47 @@ public class TriceraEngine {
         return super.toString();
     }
 
-	public String processRequest(String request) {
-        RequestGenerator gen = new RequestGenerator(requestCode);
-        System.out.println("***********");
-        // validate request here
-        validate(request);
-        response = "";
+    public String processRequest(int id, int seq, String request){
+        System.out.println("TriceraEngine.processRequest() : " + " id = " + id + " | seq = " + seq + " | requestString = " + request);
+        TriceraSQLUtils util = new TriceraSQLUtils();
+        Response resp = util.getResponseRow(id, seq);
+        switch (id) {
+            case TriceraConstants.REQUESTCODE_ASK_USER:
+                username = request;
+                responseCode = resp.getNext_reqid();
+                response = "Hello " + username + ", " + resp.getResponse_display();
+                break;
+        
+            default:
+                System.out.println("Went to default case with sp");
+                response = (resp.getResponse_display() != null) ? resp.getResponse_display() : "";
 
-        if(requestCode < 0){
-            // Should go here if replied by: {"Yes", "No", "Cancel", "Maybe", "Modify", etc.}
-            switch (requestCode) {
-                case TriceraConstants.RESPONSECODE_TF:
-                    if(isSearching){
-                        Connection conn;
-                        PreparedStatement ps;
-                        ResultSet rs;
-
-                        String result = "";
-                        String sql = "SELECT * FROM freetexttable(dbo.LESSON_LEARNT, (problem_descr, solution_descr), ? , 5) as T" 
-                            + " join dbo.LESSON_LEARNT as LL on T.[KEY] = LL.ll_ref_no";
-
-                        try {
-                            conn = VaadinConnectionPool.getConnection();
-                            ps = conn.prepareStatement(sql);
-                            ps.setString(1, request);
-                            rs = ps.executeQuery();
-                            while(rs.next()){
-                                result = rs.getString(5);
-                            } 
-                        } catch (Exception e) {
-                            System.out.println(e.toString());
+                String sp_script = (resp.getStored_proc() != null) ? resp.getStored_proc() : "";
+                if (!sp_script.isEmpty()){
+                    System.out.println("display + sp_response");
+                    StringBuilder sb = new StringBuilder();
+                    List<Object> objParam = new ArrayList<Object>();
+                    String sp_response = util.getResponseStringFromSP(resp.getStored_proc(), resp.getResponse_type(), objParam);
+                    if(!response.isEmpty()) sb.append(response);
+                    if(!sp_response.isEmpty()){
+                        sb.append("<BR/>");
+                        switch (resp.getResponse_type()) {
+                            case 1:
+                                sb.append(sp_response);
+                                break;
+                        
+                            default:
+                                // assume it is a String with COLUMN 1
+                                sb.append(sp_response);
+                                break;
                         }
-
-                        response += "Check this out! <BR/>" + result; // first response to query
-                        response += "<BR/> Did this help?";
-                        responseCode = 14;
+                        
+                        response = sb.toString();
                     }
-                    break;
-
-                case TriceraConstants.RESPONSECODE_BTN_YES:
-                    if(isSearching){
-                        response = "Great! I'm glad I could be of assistance. Is there anything else I can do for you " + username + "?";
-                        responseCode = 6144;
-                        isSearching = false;
-                    }
-                    break;
-            
-                case TriceraConstants.RESPONSECODE_BTN_NO:
-                    if(isSearching){
-                        Connection conn;
-                        PreparedStatement ps;
-                        ResultSet rs;
-
-                        String result = "";
-                        String sql = "SELECT * FROM freetexttable(dbo.LESSON_LEARNT, (problem_descr, solution_descr), ? , 5) as T" 
-                            + " join dbo.LESSON_LEARNT as LL on T.[KEY] = LL.ll_ref_no";
-
-                        try {
-                            conn = VaadinConnectionPool.getConnection();
-                            ps = conn.prepareStatement(sql);
-                            ps.setString(1, request);
-                            rs = ps.executeQuery();
-                            while(rs.next()){
-                                result = rs.getString(5);
-                            } 
-                        } catch (Exception e) {
-                            System.out.println(e.toString());
-                        }
-                        response = "How about this? <BR/>" + result;
-                        responseCode = 14;
-                    }
-                    break;
-            
-                case TriceraConstants.REQUESTCODE_ERROR:
-                
-                    break;
-                default:
-                    break;
-            }
-        } else {
-            // these are scalable generated buttons
-            switch(requestCode){
-                case TriceraConstants.REQUESTCODE_ASK_USER:
-                    username = request;
-                    TriceraSQLUtils util = new TriceraSQLUtils();
-                    util.insertUserSession(username);
-                    response = "Hello " + username + ", what can I do for you?";
-                    responseCode = gen.getResponseCode();
-                    break;
-                case TriceraConstants.REQUESTCODE_SEARCH:
-                    if(!isSearching){
-                        response = " Sure! Give me some keywords so I can check it in my 3C database.";
-                        responseCode = TriceraConstants.RESPONSECODE_TF;
-                        isSearching = true;
-                    }
-                    break;
-    
-                case TriceraConstants.REQUESTCODE_ERROR:
-                    if(isRestarted && (request.equalsIgnoreCase(TriceraConstants.CONST_OK))){
-                        UI.getCurrent().getPage().reload();
-                        response = "";
-                    }
-                    isRestarted = false;
-                    break;
-
-                default:
-                    // do nothing...
-                    response = "I'm dumb... Do you want to restart everything?";
-                    response += VaadinSession.getCurrent().getSession().getId();
-                    requestCode = 8192;
-                    isRestarted = true;
-                    break;
-            }
+                }
+                break;
         }
-        
-        
-		return response;
-    }
-    
-    private void validate(String request) {
-        System.out.println("validate(): request = " + request);
-        System.out.println("validate(): requestCode = " + requestCode);
+        return response;
     }
 
     /**
@@ -220,4 +132,5 @@ public class TriceraEngine {
     public void setResponseCode(int responseCode) {
         this.responseCode = responseCode;
     }
+
 }

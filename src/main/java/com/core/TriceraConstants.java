@@ -9,14 +9,18 @@ package com.core;
 
 public class TriceraConstants {
     // special request codes:
-    public static final int REQUESTCODE_ASK_USER = 0;
+    public static final int REQUESTCODE_ASK_USER = 1;
     public static final int REQUESTCODE_SEARCH = 2048;
     public static final int REQUESTCODE_ADD_3C = 2;
     public static final int REQUESTCODE_ADD_LESSONLEARN = 3;
     public static final int REQUESTCODE_ERROR = 8192;
 
-    // response codes to generate inputLayout components (bit-wise):
-    public static final int RESPONSECODE_TF = -1;
+    // component types based from [seq] columns. Greater than 0 are buttons.
+    public static final int SEQ_TEXTFIELD = -1;
+    public static final int SEQ_UPLOAD = -2;
+
+
+
     public static final int RESPONSECODE_BTN_YES = -2;
     public static final int RESPONSECODE_BTN_NO = -4;
     public static final int RESPONSECODE_BTN_CANCEL = -8;
