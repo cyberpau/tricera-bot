@@ -7,6 +7,8 @@ Author: John Paulo Mataac (@cyberpau)
 
 package com.ui;
 
+import java.io.FileInputStream;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,18 +17,19 @@ import com.core.RequestGenerator;
 import com.core.Response;
 import com.core.TriceraConstants;
 import com.core.TriceraEngine;
+import com.utilities.TriceraFileReader;
 import com.utilities.TriceraSQLUtils;
 import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.HasComponents;
 import com.vaadin.flow.component.HtmlComponent;
 import com.vaadin.flow.component.Key;
+import com.vaadin.flow.component.Tag;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.dependency.HtmlImport;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H2;
-import com.vaadin.flow.component.html.Hr;
-import com.vaadin.flow.component.html.NativeButton;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
@@ -36,7 +39,9 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.page.Viewport;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.component.upload.Upload;
+import com.vaadin.flow.component.upload.receivers.FileData;
 import com.vaadin.flow.component.upload.receivers.MemoryBuffer;
+import com.vaadin.flow.component.upload.receivers.MultiFileMemoryBuffer;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.PWA;
@@ -62,6 +67,7 @@ public class MainLayout extends VerticalLayout {
     private int requestid;
     private int sequenceID;
     Boolean isUploading = false;
+    Component component;
 
     public MainLayout() {
         setDefaultHorizontalComponentAlignment(Alignment.CENTER);
@@ -123,7 +129,12 @@ public class MainLayout extends VerticalLayout {
         if (request.isEmpty()) return; // just in case to prevent spam
         
         response = engine.processRequest(requestid, sequenceID, request);
-        messageLayout.add(new Bubble(engine.getUsername(), request));
+        if (component != null) {
+            messageLayout.add(new Bubble(engine.getUsername(), component));
+        } else {
+            messageLayout.add(new Bubble(engine.getUsername(), request));
+        }
+        
         System.out.println("next responseID: " + nextRequestID);
 
         String[] responseArray = response.split("<BR/>");
@@ -142,13 +153,32 @@ public class MainLayout extends VerticalLayout {
         for(Request req : util.getRequestTableByRequestID(parent_reqid)){
             response = (req.getInit_display() != null) ? req.getInit_display() : "";
             String sp_script = (req.getStored_proc() != null) ? req.getStored_proc() : "";
-            if (response.isEmpty() && !sp_script.isEmpty()){
+            if (!sp_script.isEmpty()){
+                System.out.println("display + sp_response");
+                StringBuilder sb = new StringBuilder();
                 List<Object> objParam = new ArrayList<Object>();
-                objParam.add(engine.getUsername());
-                response = util.getResponseStringFromSP(req.getStored_proc(), req.getResponse_type(), objParam);
-                System.out.println("Went to default case with sp = " + req.getStored_proc());
+                String sp_response = util.getResponseStringFromSP(req.getStored_proc(), req.getResponse_type(), objParam);
+                if(!response.isEmpty()) sb.append(response);
+                if(!sp_response.isEmpty()){
+                    sb.append("<BR/>");
+                    switch (req.getResponse_type()) {
+                        case 1:
+                            sb.append(sp_response);
+                            break;
+                    
+                        default:
+                            // assume it is a String with COLUMN 1
+                            sb.append(sp_response);
+                            break;
+                    }
+                    
+                    response = sb.toString();
+                }
             }
-            if (!response.isEmpty()) messageLayout.add(new Bubble(".", response));
+            String[] responseArray = response.split("<BR/>");
+            for(String reply : responseArray){
+                if (!response.isEmpty()) messageLayout.add(new Bubble(".", reply));
+            }
         }
         
         Div generatedButtons = new Div();
@@ -162,16 +192,22 @@ public class MainLayout extends VerticalLayout {
                 messageField = new TextField();
                 messageField.setClearButtonVisible(true);
                 messageField.setWidth("100%");
-                messageField.focus();
+                messageField.setAutofocus(true);
                 inputLayout.add(messageField);
             } else if (sequenceID == TriceraConstants.SEQ_UPLOAD){
+                Div output = new Div();
+
                 MemoryBuffer buffer = new MemoryBuffer();
                 Upload upload = new Upload(buffer);
-                
+                request = "";
+
                 upload.addSucceededListener(event -> {
+                    TriceraFileReader tfr = new TriceraFileReader();
+                    component = tfr.createComponent(event.getMIMEType(), event.getFileName(), buffer.getInputStream());
+                    showOutput(event.getFileName(), component, output);
                     isUploading = true;
-                    request = "File: " + buffer.getFileName();
-                    new Notification("Upload complete!", 3000).open();
+                    request += "File: " + event.getFileName() + " \n ";
+                    
                 });
                 inputLayout.add(upload);
 
@@ -196,5 +232,14 @@ public class MainLayout extends VerticalLayout {
             processRequest();
         });
         return autoReply;
+    }
+
+    private void showOutput(String text, Component content, HasComponents outputContainer) {
+
+        HtmlComponent p = new HtmlComponent(Tag.P);
+
+        p.getElement().setText(text);
+        outputContainer.add(p);
+        outputContainer.add(content);
     }
 }

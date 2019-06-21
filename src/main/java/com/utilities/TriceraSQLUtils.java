@@ -128,12 +128,30 @@ public class TriceraSQLUtils {
             }
             System.out.println(sp_script);
             ResultSet rs = ps.executeQuery();
-            while(rs.next()){
-                responseString = rs.getString(1);
+            switch (type) {
+                case 1:
+                    while(rs.next()){
+                        responseString = rs.getString(1);
+                    }
+                    break;
+
+                case 2:
+                    while(rs.next()){
+                        responseString = rs.getString(1);
+                        responseString += " \n\n " + rs.getObject(2);
+                    }
+                    break;
+                default:
+                    while(rs.next()){
+                        responseString = rs.getString(1);
+                    }
+                    break;
             }
+            
         } catch (Exception e) {
             System.out.println(e.toString());
-		}
+        }
+        System.out.println("TricerSQLUtils.getResponseStringFromSP() : response = " + responseString);
         return responseString;
     }
 
