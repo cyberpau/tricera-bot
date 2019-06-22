@@ -69,7 +69,8 @@ public class MainLayout extends VerticalLayout {
     Boolean isUploading = false;
     Component component;
 
-    private String sqlVariables;
+    private String param;
+    private StringBuilder paramBuilder;
 
     public MainLayout() {
         setDefaultHorizontalComponentAlignment(Alignment.CENTER);
@@ -89,6 +90,7 @@ public class MainLayout extends VerticalLayout {
 
         // start accessing the engine:
         engine = new TriceraEngine();
+        paramBuilder = new StringBuilder();
         reloadInputLayout(1);
         
         add(headerLayout, messageLayout, inputLayout);
@@ -132,9 +134,13 @@ public class MainLayout extends VerticalLayout {
         
         //response = engine.processRequest(requestid, sequenceID, request);
         if (!isUploading){
-            component = engine.processRequest(requestid, sequenceID, request, sqlVariables);
+            component = engine.processRequest(requestid, sequenceID, request, paramBuilder.toString());
+            String parameter = (engine.getParam() == null) ? "" : engine.getParam();
+            paramBuilder.append(parameter);
+            System.out.println("### MainLayout.processRequest() : paramBuilder =" + paramBuilder.toString());
             messageLayout.add(new Bubble(engine.getUsername(), request));
             if (component != null) {
+                paramBuilder = new StringBuilder();
                 messageLayout.add(new Bubble(".", component));
             } else if (engine.getResponse() != null && !engine.getResponse().isEmpty()) {
                 messageLayout.add(new Bubble(".", engine.getResponse()));

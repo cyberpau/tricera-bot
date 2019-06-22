@@ -3,6 +3,7 @@ package com.utilities;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,6 +24,7 @@ public class TriceraSQLUtils {
     private static final String SQL_SELECT_FROM_RESPONSE = "SELECT parent_reqid, seq, display, description, next_reqid, response_display, stored_proc, response_type, continue_loop, param_name FROM RESPONSE";
     private static final String SQL_SELECT_FROM_REQUEST_BY_REQID = "SELECT reqid, description, init_display, stored_proc, response_type FROM REQUEST where reqid = ? ORDER BY reqid, seq ASC";
 
+    private String param = "";
     Connection conn;
     PreparedStatement ps;
 
@@ -104,7 +106,7 @@ public class TriceraSQLUtils {
             ps = conn.prepareStatement(SQL_SELECT_FROM_RESPONSE + " where parent_reqid = ? AND seq = ? ");
             ps.setInt(1, requestID);
             ps.setInt(2, sequenceID);
-            System.out.println(SQL_SELECT_FROM_RESPONSE + " where parent_reqid = ? AND seq = ? ");
+            System.out.println("*** getResponseRow = " + SQL_SELECT_FROM_RESPONSE + " where parent_reqid = ? AND seq = ? ");
             ResultSet rs = ps.executeQuery();
             while(rs.next()){
                 
@@ -139,7 +141,7 @@ public class TriceraSQLUtils {
                 }
                 counter++;
             }
-            System.out.println(sp_script);
+            System.out.println("*** getResponseStringFromSP = " + sp_script);
             ResultSet rs = ps.executeQuery();
             switch (type) {
                 case 1:
@@ -175,7 +177,7 @@ public class TriceraSQLUtils {
             conn = VaadinConnectionPool.getConnection();
             ps = conn.prepareStatement(SQL_SELECT_FROM_REQUEST_BY_REQID);
             ps.setInt(1, requestID);
-            System.out.println(SQL_SELECT_FROM_REQUEST_BY_REQID);
+            System.out.println("*** getRequestTableByRequestID = " + SQL_SELECT_FROM_REQUEST_BY_REQID);
             ResultSet rs = ps.executeQuery();
             while(rs.next()){
                 Request request = new Request();
@@ -192,14 +194,11 @@ public class TriceraSQLUtils {
 		return requests;
     }
 
-    public void buildParameters(StringBuilder declarableStrings, String param_name, String param_value, String variables){
-        variables += " DECLARE @" + param_name + " varchar(MAX) = N'" + param_value + "'; ";
-        declarableStrings.append(" DECLARE @" + param_name + " varchar(MAX) = N'" + param_value + "'; ");
-        System.out.println("TriceraSQLUtils.buildParameters() : declarableStrings = " + declarableStrings.toString());
-
+    public void buildParameters(String param_name, String param_value){
+        this.param = " DECLARE @" + param_name + " varchar(MAX) = N'" + param_value + "'; ";
     }
 
-    public Component getResponseComponentFromSP(Response resp, String inputText, String variables){
+    public Component getResponseComponentFromSP(Response resp, String inputText, String paramBuilder){
         System.out.println("### TriceraSQLUtils.getResponseComponentFromSP() : Response = " + resp.toString());
         if (resp.getSeq() != TriceraConstants.SEQ_TEXTFIELD) return null;
         String param_name = (resp.getParam_name() == null) ? "" : resp.getParam_name();
@@ -208,21 +207,22 @@ public class TriceraSQLUtils {
         
         if (sp.isEmpty() && param_name.isEmpty()) return new Paragraph(resp.getResponse_display());
 
-        if (paramCount == 0) paramScript = new StringBuilder();
         System.out.println("Before buildParameters : ");
         if (param_name != null && !param_name.isEmpty()) {
-            buildParameters(paramScript, resp.getParam_name(), inputText, variables);
+            buildParameters(resp.getParam_name(), inputText);
             paramCount++;
         }
-        System.out.println("Before grid Display : ");
-        if(sp != null && !sp.isEmpty() && paramCount == StringUtils.countMatches(resp.getStored_proc(), "@")){
+        int sqlCount = StringUtils.countMatches(resp.getStored_proc(), "@");
+        System.out.println("Before grid Display : paramCount = " + paramCount + " | SQL param count = " + sqlCount);
+        if(sp != null && !sp.isEmpty()){
             // if we get same parameter count, execute the stored procedure
             Grid<TableSet> displayGrid = new Grid<>();
             List<TableSet> tableSet = new ArrayList<>();
+            paramBuilder += this.param;
 
             try {
-                String query = paramScript.toString() + resp.getStored_proc();
-                System.out.println("TriceraSQLUtils.getResponseComponentFromSP() : " + query);
+                String query = paramBuilder + resp.getStored_proc();
+                System.out.println("!!! TriceraSQLUtils.getResponseComponentFromSP() : " + query);
                 conn = VaadinConnectionPool.getConnection();
                 ps = conn.prepareStatement(query);
                 ResultSet rs = ps.executeQuery();
@@ -274,14 +274,24 @@ public class TriceraSQLUtils {
                         }
                         break;
                 }
-
+                
                 if (tableSet.size() > 0) return displayGrid;
                 
-            } catch (Exception e) {
-                System.out.println(e.toString());
-                return new Paragraph(e.toString());
+            } catch (SQLException se) {
+                System.out.println(se.toString());
+                if (se.getErrorCode() != 0){
+                    return new Paragraph(se.toString());
+                }
             }
         }
        return null;
+    }
+
+    public String getParam() {
+        return param;
+    }
+
+    public void setParam(String param) {
+        this.param = param;
     }
 }

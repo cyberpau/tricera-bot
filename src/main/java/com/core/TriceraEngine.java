@@ -22,6 +22,7 @@ public class TriceraEngine {
     private int responseCode = -1;
     private String username;
     private String response;
+    private String param;
 
     public TriceraEngine(){
 
@@ -51,30 +52,12 @@ public class TriceraEngine {
         return super.toString();
     }
 
-    public Component processRequest(int id, int seq, String request, String variables){
-        System.out.println("TriceraEngine.processRequest() : " + " id = " + id + " | seq = " + seq + " | requestString = " + request);
+    public Component processRequest(int id, int seq, String request, String paramBuilder){
         TriceraSQLUtils util = new TriceraSQLUtils();
         Response resp = util.getResponseRow(id, seq);
+        System.out.println("### TriceraEngine.processRequest() : Request = " + request + " | Response = " + resp.toString());
+        Component responseComponent = null;
 
-        switch (id) {
-            case TriceraConstants.REQUESTCODE_ASK_USER:
-                System.out.println("REQUESTCODE_ASK_USER");
-                username = request;
-                responseCode = resp.getNext_reqid();
-                response = "Hello " + username + ", " + resp.getResponse_display();
-                break;
-        
-            default:
-                response = (resp.getResponse_display() != null) ? resp.getResponse_display() : "";
-                return util.getResponseComponentFromSP(resp, request, variables);
-        }
-        return null;
-    }
-
-    public String processRequest(int id, int seq, String request){
-        System.out.println("TriceraEngine.processRequest() : " + " id = " + id + " | seq = " + seq + " | requestString = " + request);
-        TriceraSQLUtils util = new TriceraSQLUtils();
-        Response resp = util.getResponseRow(id, seq);
         switch (id) {
             case TriceraConstants.REQUESTCODE_ASK_USER:
                 username = request;
@@ -83,35 +66,13 @@ public class TriceraEngine {
                 break;
         
             default:
-                System.out.println("Went to default case with sp");
                 response = (resp.getResponse_display() != null) ? resp.getResponse_display() : "";
-
-                String sp_script = (resp.getStored_proc() != null) ? resp.getStored_proc() : "";
-                if (!sp_script.isEmpty()){
-                    System.out.println("display + sp_response");
-                    StringBuilder sb = new StringBuilder();
-                    List<Object> objParam = new ArrayList<Object>();
-                    String sp_response = util.getResponseStringFromSP(resp.getStored_proc(), resp.getResponse_type(), objParam);
-                    if(!response.isEmpty()) sb.append(response);
-                    if(!sp_response.isEmpty()){
-                        sb.append("<BR/>");
-                        switch (resp.getResponse_type()) {
-                            case 1:
-                                sb.append(sp_response);
-                                break;
-                        
-                            default:
-                                // assume it is a String with COLUMN 1
-                                sb.append(sp_response);
-                                break;
-                        }
-                        
-                        response = sb.toString();
-                    }
-                }
+                responseComponent = util.getResponseComponentFromSP(resp, request, paramBuilder);
+                param = util.getParam();
                 break;
         }
-        return response;
+        System.out.println("### TriceraEngine.processRequest() : for paramBuilder = " + paramBuilder);
+        return responseComponent;
     }
 
     /**
@@ -154,6 +115,14 @@ public class TriceraEngine {
      */
     public void setResponseCode(int responseCode) {
         this.responseCode = responseCode;
+    }
+
+    public String getParam() {
+        return param;
+    }
+
+    public void setParam(String param) {
+        this.param = param;
     }
 
 }
