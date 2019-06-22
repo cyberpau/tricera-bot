@@ -200,14 +200,14 @@ public class TriceraSQLUtils {
     }
 
     public Component getResponseComponentFromSP(Response resp, String inputText, String variables){
-        System.out.println("TriceraSQLUtils.getResponseComponentFromSP() : Response = " + resp.toString());
+        System.out.println("### TriceraSQLUtils.getResponseComponentFromSP() : Response = " + resp.toString());
         if (resp.getSeq() != TriceraConstants.SEQ_TEXTFIELD) return null;
-        if (resp.getStored_proc() == null || resp.getStored_proc().isEmpty()) 
-            return new Paragraph(resp.getResponse_display());
-
-        String param_name = resp.getParam_name();
-        String sp = resp.getStored_proc();
+        String param_name = (resp.getParam_name() == null) ? "" : resp.getParam_name();
+        String sp = (resp.getStored_proc() == null) ? "" : resp.getStored_proc();
         System.out.println("TriceraSQLUtils.getResponseComponentFromSP() : sp = " + sp + " | param_name = " + param_name + " | paramCount" + paramCount);
+        
+        if (sp.isEmpty() && param_name.isEmpty()) return new Paragraph(resp.getResponse_display());
+
         if (paramCount == 0) paramScript = new StringBuilder();
         System.out.println("Before buildParameters : ");
         if (param_name != null && !param_name.isEmpty()) {
@@ -246,13 +246,28 @@ public class TriceraSQLUtils {
 
                     case TriceraConstants.RESPONSE_TYPE_TABLE_COL2: // Table COL2
                         while(rs.next()){
-                            tableSet.add(new TableSet(rs.getString(1), rs.getString(2)));
+                            tableSet.add(new TableSet(rs.getString(1).trim(), rs.getString(2).trim()));
                         }
                         displayGrid.setItems(tableSet);
                         displayGrid.addColumn(TableSet::getCol1).setHeader("COLUMN 1").setFlexGrow(0);
                         displayGrid.addColumn(TableSet::getCol2).setHeader("COLUMN 2").setFlexGrow(1);
                         break;
-
+                    case TriceraConstants.RESPONSE_TYPE_BAR_COL2: // Bar Graph (Description, Data)
+                        while(rs.next()){
+                            tableSet.add(new TableSet(rs.getString(1).trim(), rs.getString(2).trim()));
+                        }
+                        displayGrid.setItems(tableSet);
+                        displayGrid.addColumn(TableSet::getCol1).setHeader("COLUMN 1").setFlexGrow(0);
+                        displayGrid.addColumn(TableSet::getCol2).setHeader("COLUMN 2").setFlexGrow(1);
+                        break;
+                    case TriceraConstants.RESPONSE_TYPE_PIE_COL2: // Pie Graph (Description, Data)
+                        while(rs.next()){
+                            tableSet.add(new TableSet(rs.getString(1).trim(), rs.getString(2).trim()));
+                        }
+                        displayGrid.setItems(tableSet);
+                        displayGrid.addColumn(TableSet::getCol1).setHeader("COLUMN 1").setFlexGrow(0);
+                        displayGrid.addColumn(TableSet::getCol2).setHeader("COLUMN 2").setFlexGrow(1);
+                        break;
                     default:
                         while(rs.next()){
                             return new Paragraph(rs.getString(1)) ;

@@ -136,6 +136,8 @@ public class MainLayout extends VerticalLayout {
             messageLayout.add(new Bubble(engine.getUsername(), request));
             if (component != null) {
                 messageLayout.add(new Bubble(".", component));
+            } else if (engine.getResponse() != null && !engine.getResponse().isEmpty()) {
+                messageLayout.add(new Bubble(".", engine.getResponse()));
             }
         } else {
             if(component != null) messageLayout.add(new Bubble(engine.getUsername(), component));
@@ -157,6 +159,7 @@ public class MainLayout extends VerticalLayout {
         
         Div generatedButtons = new Div();
         for(Response resp : util.getResponseTableByRequestID(parent_reqid)){
+            System.out.println("### MainLayout.reloadInputLayout() : " + resp.toString());
             requestid = resp.getParent_reqid();
             nextRequestID = resp.getNext_reqid();
             sequenceID = resp.getSeq();

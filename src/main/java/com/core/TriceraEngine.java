@@ -62,12 +62,13 @@ public class TriceraEngine {
                 username = request;
                 responseCode = resp.getNext_reqid();
                 response = "Hello " + username + ", " + resp.getResponse_display();
-                return new Paragraph(response);
+                break;
         
             default:
                 response = (resp.getResponse_display() != null) ? resp.getResponse_display() : "";
                 return util.getResponseComponentFromSP(resp, request, variables);
         }
+        return null;
     }
 
     public String processRequest(int id, int seq, String request){
