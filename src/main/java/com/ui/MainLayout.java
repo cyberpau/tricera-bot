@@ -69,6 +69,8 @@ public class MainLayout extends VerticalLayout {
     Boolean isUploading = false;
     Component component;
 
+    private String sqlVariables;
+
     public MainLayout() {
         setDefaultHorizontalComponentAlignment(Alignment.CENTER);
         addClassName("main-layout");
@@ -128,18 +130,15 @@ public class MainLayout extends VerticalLayout {
         System.out.println("MainLayout.processRequest() : request = " + request);
         if (request.isEmpty()) return; // just in case to prevent spam
         
-        response = engine.processRequest(requestid, sequenceID, request);
-        if (component != null) {
-            messageLayout.add(new Bubble(engine.getUsername(), component));
-        } else {
+        //response = engine.processRequest(requestid, sequenceID, request);
+        if (!isUploading){
+            component = engine.processRequest(requestid, sequenceID, request, sqlVariables);
             messageLayout.add(new Bubble(engine.getUsername(), request));
-        }
-        
-        System.out.println("next responseID: " + nextRequestID);
-
-        String[] responseArray = response.split("<BR/>");
-        for(String reply : responseArray){
-            if (!response.isEmpty()) messageLayout.add(new Bubble(".", reply));
+            if (component != null) {
+                messageLayout.add(new Bubble(".", component));
+            }
+        } else {
+            if(component != null) messageLayout.add(new Bubble(engine.getUsername(), component));
         }
         
         reloadInputLayout(nextRequestID);
@@ -152,33 +151,8 @@ public class MainLayout extends VerticalLayout {
         // Load initial display, if any
         for(Request req : util.getRequestTableByRequestID(parent_reqid)){
             response = (req.getInit_display() != null) ? req.getInit_display() : "";
-            String sp_script = (req.getStored_proc() != null) ? req.getStored_proc() : "";
-            if (!sp_script.isEmpty()){
-                System.out.println("display + sp_response");
-                StringBuilder sb = new StringBuilder();
-                List<Object> objParam = new ArrayList<Object>();
-                String sp_response = util.getResponseStringFromSP(req.getStored_proc(), req.getResponse_type(), objParam);
-                if(!response.isEmpty()) sb.append(response);
-                if(!sp_response.isEmpty()){
-                    sb.append("<BR/>");
-                    switch (req.getResponse_type()) {
-                        case 1:
-                            sb.append(sp_response);
-                            break;
-                    
-                        default:
-                            // assume it is a String with COLUMN 1
-                            sb.append(sp_response);
-                            break;
-                    }
-                    
-                    response = sb.toString();
-                }
-            }
-            String[] responseArray = response.split("<BR/>");
-            for(String reply : responseArray){
-                if (!response.isEmpty()) messageLayout.add(new Bubble(".", reply));
-            }
+            System.out.println("MainLayout.reloadInputLayout() : response = " + response);
+            if (!response.isEmpty()) messageLayout.add(new Bubble(".", response));
         }
         
         Div generatedButtons = new Div();
@@ -188,7 +162,7 @@ public class MainLayout extends VerticalLayout {
             sequenceID = resp.getSeq();
 
             if (sequenceID == TriceraConstants.SEQ_TEXTFIELD){
-                System.out.println("textfield generated from " + resp.getParent_reqid());
+                System.out.println("textfield generated from " + resp.getParent_reqid() + " with next reqid = " + nextRequestID);
                 messageField = new TextField();
                 messageField.setClearButtonVisible(true);
                 messageField.setWidth("100%");

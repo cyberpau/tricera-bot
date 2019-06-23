@@ -11,6 +11,7 @@ public class Response {
     private String stored_proc;
     private short response_type;
     private short cont_looping;
+    private String param_name;
     
     public Response(){
 
@@ -98,6 +99,36 @@ public class Response {
 
     public void setCont_looping(short cont_looping) {
         this.cont_looping = cont_looping;
+    }
+
+    public String getParam_name() {
+        return (param_name == null) ? "" : param_name;
+    }
+
+    public void setParam_name(String param_name) {
+        this.param_name = param_name;
+    }
+
+    public Response(int parent_reqid, int seq, String display, String description, int next_reqid,
+            String response_display, String stored_proc, short response_type, short cont_looping, String param_name) {
+        this.parent_reqid = parent_reqid;
+        this.seq = seq;
+        this.display = display;
+        this.description = description;
+        this.next_reqid = next_reqid;
+        this.response_display = response_display;
+        this.stored_proc = stored_proc;
+        this.response_type = response_type;
+        this.cont_looping = cont_looping;
+        this.param_name = param_name;
+    }
+
+    @Override
+    public String toString() {
+        return "Response [cont_looping=" + cont_looping + ", description=" + description + ", display=" + display
+                + ", next_reqid=" + next_reqid + ", param_name=" + param_name + ", parent_reqid=" + parent_reqid
+                + ", response_display=" + response_display + ", response_type=" + response_type + ", seq=" + seq
+                + ", stored_proc=" + stored_proc + "]";
     }
 
 }

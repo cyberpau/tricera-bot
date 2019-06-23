@@ -8,15 +8,26 @@ import java.util.List;
 
 import com.core.Request;
 import com.core.Response;
+import com.core.TableSet;
+import com.core.TriceraConstants;
+import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.html.Paragraph;
+import com.vaadin.flow.data.renderer.Renderer;
 import com.vaadin.flow.server.VaadinSession;
+
+import org.apache.commons.lang.StringUtils;
 
 
 public class TriceraSQLUtils {
-    private static final String SQL_SELECT_FROM_RESPONSE = "SELECT parent_reqid, seq, display, description, next_reqid, response_display, stored_proc, response_type, continue_loop FROM RESPONSE";
+    private static final String SQL_SELECT_FROM_RESPONSE = "SELECT parent_reqid, seq, display, description, next_reqid, response_display, stored_proc, response_type, continue_loop, param_name FROM RESPONSE";
     private static final String SQL_SELECT_FROM_REQUEST_BY_REQID = "SELECT reqid, description, init_display, stored_proc, response_type FROM REQUEST where reqid = ? ORDER BY reqid, seq ASC";
 
     Connection conn;
     PreparedStatement ps;
+
+    StringBuilder paramScript;
+    int paramCount;
 
     public TriceraSQLUtils(){
 
@@ -77,6 +88,7 @@ public class TriceraSQLUtils {
                 result.setStored_proc(rs.getString(7));
                 result.setResponse_type(rs.getShort(8));
                 result.setCont_looping(rs.getShort(9));
+                result.setParam_name(rs.getString(10));
                 responses.add(result);
             }
         } catch (Exception e) {
@@ -105,6 +117,7 @@ public class TriceraSQLUtils {
                 response.setStored_proc(rs.getString(7));
                 response.setResponse_type(rs.getShort(8));
                 response.setCont_looping(rs.getShort(9));
+                response.setParam_name(rs.getString(10));
             }
         } catch (Exception e) {
             System.out.println(e.toString());
@@ -177,5 +190,83 @@ public class TriceraSQLUtils {
             System.out.println(e.toString());
 		}
 		return requests;
+    }
+
+    public void buildParameters(StringBuilder declarableStrings, String param_name, String param_value, String variables){
+        variables += " DECLARE @" + param_name + " varchar(MAX) = N'" + param_value + "'; ";
+        declarableStrings.append(" DECLARE @" + param_name + " varchar(MAX) = N'" + param_value + "'; ");
+        System.out.println("TriceraSQLUtils.buildParameters() : declarableStrings = " + declarableStrings.toString());
+
+    }
+
+    public Component getResponseComponentFromSP(Response resp, String inputText, String variables){
+        System.out.println("TriceraSQLUtils.getResponseComponentFromSP() : Response = " + resp.toString());
+        if (resp.getSeq() != TriceraConstants.SEQ_TEXTFIELD) return null;
+        if (resp.getStored_proc() == null || resp.getStored_proc().isEmpty()) 
+            return new Paragraph(resp.getResponse_display());
+
+        String param_name = resp.getParam_name();
+        String sp = resp.getStored_proc();
+        System.out.println("TriceraSQLUtils.getResponseComponentFromSP() : sp = " + sp + " | param_name = " + param_name + " | paramCount" + paramCount);
+        if (paramCount == 0) paramScript = new StringBuilder();
+        System.out.println("Before buildParameters : ");
+        if (param_name != null && !param_name.isEmpty()) {
+            buildParameters(paramScript, resp.getParam_name(), inputText, variables);
+            paramCount++;
+        }
+        System.out.println("Before grid Display : ");
+        if(sp != null && !sp.isEmpty() && paramCount == StringUtils.countMatches(resp.getStored_proc(), "@")){
+            // if we get same parameter count, execute the stored procedure
+            Grid<TableSet> displayGrid = new Grid<>();
+            List<TableSet> tableSet = new ArrayList<>();
+
+            try {
+                String query = paramScript.toString() + resp.getStored_proc();
+                System.out.println("TriceraSQLUtils.getResponseComponentFromSP() : " + query);
+                conn = VaadinConnectionPool.getConnection();
+                ps = conn.prepareStatement(query);
+                ResultSet rs = ps.executeQuery();
+                switch (resp.getResponse_type()) {
+                    case TriceraConstants.RESPONSE_TYPE_STRING:
+                        while(rs.next()){
+                            return new Paragraph(rs.getString(1)) ;
+                        }
+                        break;
+    
+                    case TriceraConstants.RESPONSE_TYPE_TABLE_COL1:
+                        
+                        while(rs.next()){
+                            tableSet.add(new TableSet(rs.getString(1)));
+                        }
+                        displayGrid.setItems(tableSet);
+                        for(int col = 2; col < 5; col++){
+                            displayGrid.removeColumnByKey("Col" + col);
+                        }
+                        break;
+
+                    case TriceraConstants.RESPONSE_TYPE_TABLE_COL2: // Table COL2
+                        while(rs.next()){
+                            tableSet.add(new TableSet(rs.getString(1), rs.getString(2)));
+                        }
+                        displayGrid.setItems(tableSet);
+                        displayGrid.addColumn(TableSet::getCol1).setHeader("COLUMN 1").setFlexGrow(0);
+                        displayGrid.addColumn(TableSet::getCol2).setHeader("COLUMN 2").setFlexGrow(1);
+                        break;
+
+                    default:
+                        while(rs.next()){
+                            return new Paragraph(rs.getString(1)) ;
+                        }
+                        break;
+                }
+
+                if (tableSet.size() > 0) return displayGrid;
+                
+            } catch (Exception e) {
+                System.out.println(e.toString());
+                return new Paragraph(e.toString());
+            }
+        }
+       return null;
     }
 }

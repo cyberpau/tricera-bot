@@ -19,7 +19,14 @@ public class TriceraConstants {
     public static final int SEQ_TEXTFIELD = -1;
     public static final int SEQ_UPLOAD = -2;
 
-
+    // request / response types
+    public static final int RESPONSE_TYPE_STRING = 0;
+    public static final int RESPONSE_TYPE_TABLE_COL1 = 1;
+    public static final int RESPONSE_TYPE_TABLE_COL2 = 2;
+    public static final int RESPONSE_TYPE_TABLE_COL3 = 3;
+    public static final int RESPONSE_TYPE_TABLE_COL4 = 4;
+    public static final int RESPONSE_TYPE_BAR_COL2 = 5;
+    public static final int RESPONSE_TYPE_PIE_COL2 = 6;
 
     public static final int RESPONSECODE_BTN_YES = -2;
     public static final int RESPONSECODE_BTN_NO = -4;

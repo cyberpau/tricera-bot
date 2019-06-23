@@ -65,8 +65,9 @@ public class TriceraFileReader {
                         ImageReader reader = readers.next();
                         try {
                             reader.setInput(in);
-                            image.setWidth(reader.getWidth(0) + "px");
-                            image.setHeight(reader.getHeight(0) + "px");
+                            image.setWidth("60%");
+                            image.setHeight("60%");
+                            image.setMaxWidth("400px");
                         } finally {
                             reader.dispose();
                         }

@@ -57,6 +57,7 @@
         .message-list {
             overflow-y: scroll;
             width: 100%;
+            height: auto;
         }
         
         .bubble-profile {
@@ -75,6 +76,7 @@
             -webkit-text-fill-color: aliceblue;
             align-content: flex-end;
             white-space: pre-wrap;
+            overflow-y: auto;
         }
 
         .chat-bubble__others {
@@ -85,6 +87,7 @@
             border-radius: 10px;
             align-items: flex-start;
             white-space: pre-wrap;
+            overflow-y: auto;
         }
 
         .main-layout__autobtn {
@@ -94,6 +97,22 @@
         .main-layout__btnDefaults {
             min-width: 50px;
             margin: 4px;
+        }
+
+        vaadin-grid {
+            overflow-y: auto;
+            min-height:auto;
+        }
+
+        vaadin-grid vaadin-grid-cell-content {
+            overflow-y: auto;
+            white-space: pre-wrap;
+            font-size: 10px;
+            min-height:auto;
+        }
+
+        table {
+            min-height:auto;
         }
 
     </style>

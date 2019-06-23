@@ -12,6 +12,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.utilities.TriceraSQLUtils;
+import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.Paragraph;
 
 
 public class TriceraEngine {
@@ -46,6 +49,25 @@ public class TriceraEngine {
     @Override
     public String toString() {
         return super.toString();
+    }
+
+    public Component processRequest(int id, int seq, String request, String variables){
+        System.out.println("TriceraEngine.processRequest() : " + " id = " + id + " | seq = " + seq + " | requestString = " + request);
+        TriceraSQLUtils util = new TriceraSQLUtils();
+        Response resp = util.getResponseRow(id, seq);
+
+        switch (id) {
+            case TriceraConstants.REQUESTCODE_ASK_USER:
+                System.out.println("REQUESTCODE_ASK_USER");
+                username = request;
+                responseCode = resp.getNext_reqid();
+                response = "Hello " + username + ", " + resp.getResponse_display();
+                return new Paragraph(response);
+        
+            default:
+                response = (resp.getResponse_display() != null) ? resp.getResponse_display() : "";
+                return util.getResponseComponentFromSP(resp, request, variables);
+        }
     }
 
     public String processRequest(int id, int seq, String request){
