@@ -12,6 +12,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.core.Document;
 import com.core.Request;
 import com.core.RequestGenerator;
 import com.core.Response;
@@ -68,6 +69,7 @@ public class MainLayout extends VerticalLayout {
     private int sequenceID;
     Boolean isUploading = false;
     Component component;
+    Document uploadDoc;
 
     private String param;
     private StringBuilder paramBuilder;
@@ -136,17 +138,19 @@ public class MainLayout extends VerticalLayout {
         if (!isUploading){
             component = engine.processRequest(requestid, sequenceID, request, paramBuilder.toString());
             String parameter = (engine.getParam() == null) ? "" : engine.getParam();
+            if(parameter.isEmpty()) paramBuilder = new StringBuilder();
             paramBuilder.append(parameter);
             System.out.println("### MainLayout.processRequest() : paramBuilder =" + paramBuilder.toString());
             messageLayout.add(new Bubble(engine.getUsername(), request));
             if (component != null) {
-                paramBuilder = new StringBuilder();
                 messageLayout.add(new Bubble(".", component));
             } else if (engine.getResponse() != null && !engine.getResponse().isEmpty()) {
                 messageLayout.add(new Bubble(".", engine.getResponse()));
             }
         } else {
+            engine.processDocumentUpload(uploadDoc);
             if(component != null) messageLayout.add(new Bubble(engine.getUsername(), component));
+            isUploading = false;
         }
         
         reloadInputLayout(nextRequestID);
@@ -187,6 +191,7 @@ public class MainLayout extends VerticalLayout {
                 upload.addSucceededListener(event -> {
                     TriceraFileReader tfr = new TriceraFileReader();
                     component = tfr.createComponent(event.getMIMEType(), event.getFileName(), buffer.getInputStream());
+                    uploadDoc = tfr.getDocument();
                     showOutput(event.getFileName(), component, output);
                     isUploading = true;
                     request += "File: " + event.getFileName() + " \n ";

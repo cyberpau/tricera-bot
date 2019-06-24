@@ -4,20 +4,28 @@ import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
 import javax.imageio.stream.ImageInputStream;
 
+import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.util.Iterator;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.commons.io.IOUtils;
 
+import com.core.Document;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.HasComponents;
 import com.vaadin.flow.component.HtmlComponent;
 import com.vaadin.flow.component.Tag;
 import com.vaadin.flow.component.Text;
+import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.component.html.NativeButton;
@@ -35,6 +43,7 @@ import com.vaadin.flow.server.StreamResource;
  * TriceraFileReader
  */
 public class TriceraFileReader {
+    private Document document;
 
     public TriceraFileReader() {
         
@@ -42,14 +51,22 @@ public class TriceraFileReader {
 
     public Component createComponent(String mimeType, String fileName,
             InputStream stream) {
+        System.out.println("TriceraFileReader.createComponent() : mimeType = " + mimeType);
         if (mimeType.startsWith("text")) {
             String text = "";
+            String urlFileName = fileName.replace(" ", "%20");
             try {
                 text = IOUtils.toString(stream, "UTF-8");
+                document = new Document(fileName, text, 0, "Documents/" + fileName);
             } catch (IOException e) {
+                System.out.println("TriceraFileReader.createComponent() : IOException e = " + e.toString());
                 text = "exception reading stream";
             }
-            return new Paragraph(text);
+            // Not yet working
+            Anchor docLink = new Anchor("Documents/" + urlFileName + "", fileName);
+            docLink.getElement().setAttribute("download", "Documents/" + urlFileName + "");
+            docLink.getElement().setAttribute("target","_blank");
+            return docLink ;
         } else if (mimeType.startsWith("image")) {
             Image image = new Image();
             try {
@@ -86,4 +103,12 @@ public class TriceraFileReader {
         return content;
 
 }
+
+    public Document getDocument() {
+        return document;
+    }
+
+    public void setDocument(Document document) {
+        this.document = document;
+    }
 }

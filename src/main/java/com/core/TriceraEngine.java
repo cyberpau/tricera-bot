@@ -8,6 +8,11 @@ Author: John Paulo Mataac (@cyberpau)
 
 package com.core;
 
+import java.io.File;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,6 +20,8 @@ import com.utilities.TriceraSQLUtils;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Paragraph;
+
+import org.apache.commons.io.FileUtils;
 
 
 public class TriceraEngine {
@@ -73,6 +80,20 @@ public class TriceraEngine {
         }
         System.out.println("### TriceraEngine.processRequest() : for paramBuilder = " + paramBuilder);
         return responseComponent;
+    }
+
+    public void processDocumentUpload(Document uploadDoc) {
+        TriceraSQLUtils util = new TriceraSQLUtils();
+        util.insertDocument(uploadDoc);
+        System.out.println("### TriceraEngine.processDocumentUpload() : Document = " + uploadDoc.toString());
+        
+        try {
+            final File file = new  File("References/" + uploadDoc.getTitle());
+            FileUtils.writeStringToFile(file, uploadDoc.getBulk_content(), StandardCharsets.UTF_8);
+        } catch (Exception e) {
+            System.out.println("### TriceraEngine.processDocumentUpload() : Exception = " + e.toString());
+        }
+        
     }
 
     /**

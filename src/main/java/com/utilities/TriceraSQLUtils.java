@@ -7,6 +7,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.core.Document;
 import com.core.Request;
 import com.core.Response;
 import com.core.TableSet;
@@ -23,7 +24,7 @@ import org.apache.commons.lang.StringUtils;
 public class TriceraSQLUtils {
     private static final String SQL_SELECT_FROM_RESPONSE = "SELECT parent_reqid, seq, display, description, next_reqid, response_display, stored_proc, response_type, continue_loop, param_name FROM RESPONSE";
     private static final String SQL_SELECT_FROM_REQUEST_BY_REQID = "SELECT reqid, description, init_display, stored_proc, response_type FROM REQUEST where reqid = ? ORDER BY reqid, seq ASC";
-
+    private static final String SQL_INSERT_INTO_DOCUMENT = "INSERT INTO [dbo].[DOCUMENTS]([title] ,[bulk_content] ,[uploader_id] ,[file_location]) VALUES (?, ?, ? ,?);";
     private String param = "";
     Connection conn;
     PreparedStatement ps;
@@ -194,8 +195,25 @@ public class TriceraSQLUtils {
 		return requests;
     }
 
-    public void buildParameters(String param_name, String param_value){
+    public void buildParameters(String paramBuilder, String param_name, String param_value){
         this.param = " DECLARE @" + param_name + " varchar(MAX) = N'" + param_value + "'; ";
+    }
+
+    public void insertDocument(Document doc) {
+
+        try {
+            conn = VaadinConnectionPool.getConnection();
+            ps = conn.prepareStatement(SQL_INSERT_INTO_DOCUMENT);
+            ps.setString(1, doc.getTitle());
+            ps.setString(2, doc.getBulk_content());
+            ps.setInt(3, doc.getUploader_id());
+            ps.setString(4, doc.getFile_location());
+            System.out.println("*** insertDocument = " + SQL_INSERT_INTO_DOCUMENT);
+            ps.executeQuery();
+            
+        } catch (Exception e) {
+            System.out.println(e.toString());
+		}
     }
 
     public Component getResponseComponentFromSP(Response resp, String inputText, String paramBuilder){
@@ -209,7 +227,7 @@ public class TriceraSQLUtils {
 
         System.out.println("Before buildParameters : ");
         if (param_name != null && !param_name.isEmpty()) {
-            buildParameters(resp.getParam_name(), inputText);
+            buildParameters(paramBuilder, resp.getParam_name(), inputText);
             paramCount++;
         }
         int sqlCount = StringUtils.countMatches(resp.getStored_proc(), "@");
