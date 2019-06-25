@@ -10,9 +10,6 @@ import java.util.Properties;
 public class VaadinConnectionPool {
 
     private final static String driver = "com.microsoft.sqlserver.jdbc.SQLServerDriver";
-    private final static String path = "jdbc:sqlserver://localhost\\MSSQLSERVER;databaseName=TriceraDB";
-    private final static String user = "sa";
-    private final static String pw = "Fuj123!";
     private final static String filename = "application.properties";
     private static Connection conn;
 
@@ -26,7 +23,7 @@ public class VaadinConnectionPool {
             }
             prop.load(input);
             Class.forName(driver);
-            conn = DriverManager.getConnection(path, prop.getProperty("user"), prop.getProperty("pw"));
+            conn = DriverManager.getConnection(prop.getProperty("path"), prop.getProperty("user"), prop.getProperty("pw"));
         } 
         catch (SQLException sqle) {
             System.out.println(sqle.toString());
