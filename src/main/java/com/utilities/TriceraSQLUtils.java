@@ -13,6 +13,7 @@ import com.core.Response;
 import com.core.TableSet;
 import com.core.TriceraConstants;
 import com.ui.TriceraPieChart;
+import com.ui.TriceraVerticalBar;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Paragraph;
@@ -197,7 +198,7 @@ public class TriceraSQLUtils {
     }
 
     public void buildParameters(String paramBuilder, String param_name, String param_value){
-        this.param = " DECLARE @" + param_name + " varchar(MAX) = N'" + param_value + "'; ";
+        this.param = " DECLARE @" + param_name + " varchar(8000) = N'" + param_value + "'; ";
     }
 
     public void insertDocument(Document doc) {
@@ -271,14 +272,12 @@ public class TriceraSQLUtils {
                         displayGrid.addColumn(TableSet::getCol1).setHeader("COLUMN 1").setFlexGrow(0);
                         displayGrid.addColumn(TableSet::getCol2).setHeader("COLUMN 2").setFlexGrow(1);
                         break;
-                    case TriceraConstants.RESPONSE_TYPE_BAR_COL2: // Bar Graph (Description, Data)
+                    case TriceraConstants.RESPONSE_TYPE_VBAR_COL2: // Bar Graph (Description, Data)
                         while(rs.next()){
                             tableSet.add(new TableSet(rs.getString(1).trim(), rs.getString(2).trim()));
                         }
-                        displayGrid.setItems(tableSet);
-                        displayGrid.addColumn(TableSet::getCol1).setHeader("COLUMN 1").setFlexGrow(0);
-                        displayGrid.addColumn(TableSet::getCol2).setHeader("COLUMN 2").setFlexGrow(1);
-                        break;
+                        TriceraVerticalBar vbar = new TriceraVerticalBar(tableSet);
+                        return vbar;
                     case TriceraConstants.RESPONSE_TYPE_PIE_COL2: // Pie Graph (Description, Data)
                         while(rs.next()){
                             tableSet.add(new TableSet(rs.getString(1).trim(), rs.getString(2).trim()));

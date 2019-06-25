@@ -202,6 +202,7 @@ public class MainLayout extends VerticalLayout {
                     inputLayout.add(upload);
     
                 } else if (sequenceID == TriceraConstants.SEQ_REPORT_BTN){
+                    System.out.println("Button generated from " + resp.getParent_reqid() + " with next reqid = " + nextRequestID);
                     generatedButtons.add(createAutoReplyButton(resp.getDisplay(), nextRequestID, sequenceID));
                 }
             } else {
