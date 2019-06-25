@@ -12,6 +12,7 @@ import com.core.Request;
 import com.core.Response;
 import com.core.TableSet;
 import com.core.TriceraConstants;
+import com.ui.TriceraPieChart;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Paragraph;
@@ -218,7 +219,7 @@ public class TriceraSQLUtils {
 
     public Component getResponseComponentFromSP(Response resp, String inputText, String paramBuilder){
         System.out.println("### TriceraSQLUtils.getResponseComponentFromSP() : Response = " + resp.toString());
-        if (resp.getSeq() != TriceraConstants.SEQ_TEXTFIELD) return null;
+        if (resp.getSeq() > 0) return null;
         String param_name = (resp.getParam_name() == null) ? "" : resp.getParam_name();
         String sp = (resp.getStored_proc() == null) ? "" : resp.getStored_proc();
         System.out.println("TriceraSQLUtils.getResponseComponentFromSP() : sp = " + sp + " | param_name = " + param_name + " | paramCount" + paramCount);
@@ -282,10 +283,8 @@ public class TriceraSQLUtils {
                         while(rs.next()){
                             tableSet.add(new TableSet(rs.getString(1).trim(), rs.getString(2).trim()));
                         }
-                        displayGrid.setItems(tableSet);
-                        displayGrid.addColumn(TableSet::getCol1).setHeader("COLUMN 1").setFlexGrow(0);
-                        displayGrid.addColumn(TableSet::getCol2).setHeader("COLUMN 2").setFlexGrow(1);
-                        break;
+                        TriceraPieChart pie = new TriceraPieChart(tableSet);
+                        return pie;
                     default:
                         while(rs.next()){
                             return new Paragraph(rs.getString(1)) ;

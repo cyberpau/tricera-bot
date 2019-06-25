@@ -132,7 +132,7 @@ public class MainLayout extends VerticalLayout {
 
     private void processRequest() {
         System.out.println("MainLayout.processRequest() : request = " + request);
-        if (request.isEmpty()) return; // just in case to prevent spam
+        if (request != null && request.isEmpty()) return; // just in case to prevent spam
         
         //response = engine.processRequest(requestid, sequenceID, request);
         if (!isUploading){
@@ -142,16 +142,16 @@ public class MainLayout extends VerticalLayout {
             paramBuilder.append(parameter);
             System.out.println("### MainLayout.processRequest() : paramBuilder =" + paramBuilder.toString());
             messageLayout.add(new Bubble(engine.getUsername(), request));
-            if (component != null) {
-                messageLayout.add(new Bubble(".", component));
-            } else if (engine.getResponse() != null && !engine.getResponse().isEmpty()) {
-                messageLayout.add(new Bubble(".", engine.getResponse()));
-            }
+            if (component != null) messageLayout.add(new Bubble(".", component));
+            
         } else {
-            engine.processDocumentUpload(uploadDoc);
+            engine.setUploadDoc(uploadDoc);
+            engine.processRequest(requestid, sequenceID, request, paramBuilder.toString());
             if(component != null) messageLayout.add(new Bubble(engine.getUsername(), component));
             isUploading = false;
         }
+        if (engine.getResponse() != null && !engine.getResponse().isEmpty()) 
+        messageLayout.add(new Bubble(".", engine.getResponse()));
         
         reloadInputLayout(nextRequestID);
     }
@@ -174,31 +174,36 @@ public class MainLayout extends VerticalLayout {
             nextRequestID = resp.getNext_reqid();
             sequenceID = resp.getSeq();
 
-            if (sequenceID == TriceraConstants.SEQ_TEXTFIELD){
-                System.out.println("textfield generated from " + resp.getParent_reqid() + " with next reqid = " + nextRequestID);
-                messageField = new TextField();
-                messageField.setClearButtonVisible(true);
-                messageField.setWidth("100%");
-                messageField.setAutofocus(true);
-                inputLayout.add(messageField);
-            } else if (sequenceID == TriceraConstants.SEQ_UPLOAD){
-                Div output = new Div();
-
-                MemoryBuffer buffer = new MemoryBuffer();
-                Upload upload = new Upload(buffer);
-                request = "";
-
-                upload.addSucceededListener(event -> {
-                    TriceraFileReader tfr = new TriceraFileReader();
-                    component = tfr.createComponent(event.getMIMEType(), event.getFileName(), buffer.getInputStream());
-                    uploadDoc = tfr.getDocument();
-                    showOutput(event.getFileName(), component, output);
-                    isUploading = true;
-                    request += "File: " + event.getFileName() + " \n ";
-                    
-                });
-                inputLayout.add(upload);
-
+            // check if special component
+            if (sequenceID < 0) {
+                if (sequenceID == TriceraConstants.SEQ_TEXTFIELD){
+                    System.out.println("textfield generated from " + resp.getParent_reqid() + " with next reqid = " + nextRequestID);
+                    messageField = new TextField();
+                    messageField.setClearButtonVisible(true);
+                    messageField.setWidth("100%");
+                    messageField.setAutofocus(true);
+                    inputLayout.add(messageField);
+                } else if (sequenceID == TriceraConstants.SEQ_UPLOAD){
+                    Div output = new Div();
+    
+                    MemoryBuffer buffer = new MemoryBuffer();
+                    Upload upload = new Upload(buffer);
+                    request = "";
+    
+                    upload.addSucceededListener(event -> {
+                        TriceraFileReader tfr = new TriceraFileReader();
+                        component = tfr.createComponent(event.getMIMEType(), event.getFileName(), buffer.getInputStream());
+                        uploadDoc = tfr.getDocument();
+                        showOutput(event.getFileName(), component, output);
+                        isUploading = true;
+                        request += "File: " + event.getFileName() + " \n ";
+                        
+                    });
+                    inputLayout.add(upload);
+    
+                } else if (sequenceID == TriceraConstants.SEQ_REPORT_BTN){
+                    generatedButtons.add(createAutoReplyButton(resp.getDisplay(), nextRequestID, sequenceID));
+                }
             } else {
                 generatedButtons.add(createAutoReplyButton(resp.getDisplay(), nextRequestID, sequenceID));
             }
