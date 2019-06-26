@@ -1,0 +1,5 @@
+
+
+    Windows may automatically restart after displaying a blue screen, as shown below. You may also get a Windows startup menu upon reboot. If you do, choose 'Start Windows Normally' and see if the problem goes away. It may be a one-off glitch.
+    If Windows hasn't automatically restarted after displaying a blue screen, press the Ctrl & Alt & Del keys on your keyboard at the same time to restart the machine. You may need to press and hold the power button on the machine to force it to turn off. Switch it back on and, if you get a Windows startup menu upon reboot, choose 'Start Windows Normally' and see if the problem goes away.
+

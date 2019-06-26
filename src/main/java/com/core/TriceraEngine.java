@@ -8,24 +8,11 @@ Author: John Paulo Mataac (@cyberpau)
 
 package com.core;
 
-import java.applet.AppletContext;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.servlet.ServletContext;
 
 import com.utilities.TriceraSQLUtils;
 import com.vaadin.flow.component.Component;
-import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.html.Paragraph;
-
-import org.apache.commons.io.FileUtils;
 
 public class TriceraEngine {
     private int requestCode = 0;
@@ -81,6 +68,7 @@ public class TriceraEngine {
             if (uploadDoc == null)
                 return null;
             util.insertDocument(uploadDoc);
+            response = resp.getResponse_display();
             System.out.println("### TriceraEngine.processRequest() : Document = " + uploadDoc.toString());
             try {
                 File file = new File("References/" + uploadDoc.getTitle());

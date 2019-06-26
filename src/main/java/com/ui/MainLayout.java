@@ -7,14 +7,8 @@ Author: John Paulo Mataac (@cyberpau)
 
 package com.ui;
 
-import java.io.FileInputStream;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.List;
-
 import com.core.Document;
 import com.core.Request;
-import com.core.RequestGenerator;
 import com.core.Response;
 import com.core.TriceraConstants;
 import com.core.TriceraEngine;
@@ -40,9 +34,7 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.page.Viewport;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.component.upload.Upload;
-import com.vaadin.flow.component.upload.receivers.FileData;
 import com.vaadin.flow.component.upload.receivers.MemoryBuffer;
-import com.vaadin.flow.component.upload.receivers.MultiFileMemoryBuffer;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.PWA;
@@ -142,16 +134,21 @@ public class MainLayout extends VerticalLayout {
             paramBuilder.append(parameter);
             System.out.println("### MainLayout.processRequest() : paramBuilder =" + paramBuilder.toString());
             messageLayout.add(new Bubble(engine.getUsername(), request));
-            if (component != null) messageLayout.add(new Bubble(".", component));
+            if (component != null){ 
+                messageLayout.add(new Bubble(".", component));
+            }else {
+                if (engine.getResponse() != null && !engine.getResponse().isEmpty()) 
+                messageLayout.add(new Bubble(".", engine.getResponse()));
+            }
             
         } else {
             engine.setUploadDoc(uploadDoc);
             engine.processRequest(requestid, sequenceID, request, paramBuilder.toString());
             if(component != null) messageLayout.add(new Bubble(engine.getUsername(), component));
             isUploading = false;
+            if (engine.getResponse() != null && !engine.getResponse().isEmpty()) 
+                messageLayout.add(new Bubble(".", engine.getResponse()));
         }
-        if (engine.getResponse() != null && !engine.getResponse().isEmpty()) 
-        messageLayout.add(new Bubble(".", engine.getResponse()));
         
         reloadInputLayout(nextRequestID);
     }

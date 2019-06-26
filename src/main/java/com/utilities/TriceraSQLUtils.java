@@ -17,14 +17,13 @@ import com.ui.TriceraVerticalBar;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Paragraph;
-import com.vaadin.flow.data.renderer.Renderer;
 import com.vaadin.flow.server.VaadinSession;
 
 import org.apache.commons.lang.StringUtils;
 
 
 public class TriceraSQLUtils {
-    private static final String SQL_SELECT_FROM_RESPONSE = "SELECT parent_reqid, seq, display, description, next_reqid, response_display, stored_proc, response_type, continue_loop, param_name FROM RESPONSE";
+    private static final String SQL_SELECT_FROM_RESPONSE = "SELECT parent_reqid, seq, display, description, next_reqid, response_display, stored_proc, response_type, continue_loop, param_name FROM RESPONSE ";
     private static final String SQL_SELECT_FROM_REQUEST_BY_REQID = "SELECT reqid, description, init_display, stored_proc, response_type FROM REQUEST where reqid = ? ORDER BY reqid, seq ASC";
     private static final String SQL_INSERT_INTO_DOCUMENT = "INSERT INTO [dbo].[DOCUMENTS]([title] ,[bulk_content] ,[uploader_id] ,[file_location]) VALUES (?, ?, ? ,?);";
     private String param = "";
@@ -106,7 +105,7 @@ public class TriceraSQLUtils {
         Response response = new Response();
         try {
             conn = VaadinConnectionPool.getConnection();
-            ps = conn.prepareStatement(SQL_SELECT_FROM_RESPONSE + " where parent_reqid = ? AND seq = ? ");
+            ps = conn.prepareStatement(SQL_SELECT_FROM_RESPONSE + " where parent_reqid = ? AND seq = ? ORDER BY parent_reqid, seq ASC");
             ps.setInt(1, requestID);
             ps.setInt(2, sequenceID);
             System.out.println("*** getResponseRow = " + SQL_SELECT_FROM_RESPONSE + " where parent_reqid = ? AND seq = ? ");
@@ -249,7 +248,11 @@ public class TriceraSQLUtils {
                 switch (resp.getResponse_type()) {
                     case TriceraConstants.RESPONSE_TYPE_STRING:
                         while(rs.next()){
-                            return new Paragraph(rs.getString(1)) ;
+                            if(rs.getString(1) == null && rs.getString(1).isEmpty()){
+                                resp.setNext_reqid(900);
+                                return new Paragraph("Can't find related results. Please provide more detailed query.");
+                            }
+                            return new Paragraph(rs.getString(1));
                         }
                         break;
     

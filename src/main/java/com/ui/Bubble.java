@@ -8,8 +8,6 @@ Author: John Paulo Mataac (@cyberpau)
 package com.ui;
 
 import com.vaadin.flow.component.Component;
-import com.vaadin.flow.component.HtmlComponent;
-import com.vaadin.flow.component.Tag;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.component.html.Paragraph;
