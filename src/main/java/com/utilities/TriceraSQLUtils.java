@@ -21,6 +21,8 @@ import com.vaadin.flow.server.VaadinSession;
 
 import org.apache.commons.lang.StringUtils;
 
+import net.bytebuddy.implementation.bytecode.Throw;
+
 
 public class TriceraSQLUtils {
     private static final String SQL_SELECT_FROM_RESPONSE = "SELECT parent_reqid, seq, display, description, next_reqid, response_display, stored_proc, response_type, continue_loop, param_name FROM RESPONSE ";
@@ -53,7 +55,7 @@ public class TriceraSQLUtils {
         }
     }
 
-    public int getUserSessionTransactionId(String username){
+    public int getUserSessionTransactionId(String username) throws SQLException {
         if (username.isEmpty()) return 0;
         String sessionID = VaadinSession.getCurrent().getSession().getId();
         String sql = "SELECT TOP 1 tranid FROM [SESSION_LOGS] WHERE session_id = ? OR user_id = ?";
@@ -69,12 +71,12 @@ public class TriceraSQLUtils {
                 tranid = rs.getInt(1);
             }
         } catch (Exception e) {
-            System.out.println(e.toString());
+            throw new SQLException("");
         }
         return tranid;
     }
 
-    public List<Response> getResponseTableByRequestID(int requestID){
+    public List<Response> getResponseTableByRequestID(int requestID) throws SQLException {
         List<Response> responses = new ArrayList<Response>();
         try {
             conn = VaadinConnectionPool.getConnection();
@@ -97,6 +99,7 @@ public class TriceraSQLUtils {
             }
         } catch (Exception e) {
             System.out.println(e.toString());
+            throw new SQLException();
 		}
 		return responses;
     }
@@ -172,7 +175,7 @@ public class TriceraSQLUtils {
         return responseString;
     }
 
-    public List<Request> getRequestTableByRequestID(int requestID){
+    public List<Request> getRequestTableByRequestID(int requestID) throws SQLException {
         List<Request> requests = new ArrayList<Request>();
         
         try {
@@ -192,6 +195,7 @@ public class TriceraSQLUtils {
             }
         } catch (Exception e) {
             System.out.println(e.toString());
+            throw new SQLException(e);
 		}
 		return requests;
     }

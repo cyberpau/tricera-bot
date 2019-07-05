@@ -10,17 +10,20 @@ package com.core;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.util.logging.Logger;
 
 import com.utilities.TriceraSQLUtils;
 import com.vaadin.flow.component.Component;
 
 public class TriceraEngine {
+    Logger logger = Logger.getLogger(TriceraEngine.class.getName());
     private int requestCode = 0;
     private int responseCode = -1;
     private String username;
-    private String response;
+    //private String response;
     private String param;
     private Document uploadDoc;
+    private Response response;
 
     public TriceraEngine() {
 
@@ -61,14 +64,14 @@ public class TriceraEngine {
         case TriceraConstants.REQUESTCODE_ASK_USER:
             username = request;
             responseCode = resp.getNext_reqid();
-            response = "Hello " + username + ", " + resp.getResponse_display();
+            response.setDisplay("Hello " + username + ", " + resp.getResponse_display());
             break;
 
         case TriceraConstants.REQUESTCODE_DOCUMENT_UPLOAD:
             if (uploadDoc == null)
                 return null;
             util.insertDocument(uploadDoc);
-            response = resp.getResponse_display();
+            response.setDisplay(resp.getResponse_display());
             System.out.println("### TriceraEngine.processRequest() : Document = " + uploadDoc.toString());
             try {
                 File file = new File("References/" + uploadDoc.getTitle());
@@ -89,27 +92,13 @@ public class TriceraEngine {
             break;
 
         default:
-            response = (resp.getResponse_display() != null) ? resp.getResponse_display() : "";
+            response.setDisplay((resp.getResponse_display() != null) ? resp.getResponse_display() : "");
             responseComponent = util.getResponseComponentFromSP(resp, request, paramBuilder);
             param = util.getParam();
             break;
         }
         System.out.println("### TriceraEngine.processRequest() : for paramBuilder = " + paramBuilder);
         return responseComponent;
-    }
-
-    /**
-     * @return the response
-     */
-    public String getResponse() {
-        return response;
-    }
-
-    /**
-     * @param response the response to set
-     */
-    public void setResponse(String response) {
-        this.response = response;
     }
 
     /**
@@ -156,4 +145,15 @@ public class TriceraEngine {
         this.uploadDoc = uploadDoc;
     }
 
+    public Response getResponse() {
+        return response;
+    }
+
+    public void setResponse(Response response) {
+        this.response = response;
+    }
+
+    public void processRequest(){
+        
+    }
 }

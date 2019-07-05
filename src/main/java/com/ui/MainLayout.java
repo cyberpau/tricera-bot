@@ -63,6 +63,8 @@ public class MainLayout extends VerticalLayout {
     Component component;
     Document uploadDoc;
 
+    TriceraComponents tricom;
+
     private String param;
     private StringBuilder paramBuilder;
 
@@ -82,44 +84,14 @@ public class MainLayout extends VerticalLayout {
         inputLayout.addClassName("main-layout__input");
         inputLayout.setAlignItems(Alignment.END);
 
-        // start accessing the engine:
+        // load dynamic UI components
+        tricom = new TriceraComponents(messageLayout, inputLayout);
         engine = new TriceraEngine();
         paramBuilder = new StringBuilder();
-        reloadInputLayout(1);
+        tricom.reloadInputLayout(1);
         
         add(headerLayout, messageLayout, inputLayout);
         expand(messageLayout);
-    }
-
-    private void addDefaultInputComponents() {
-        Button btnSend = new Button("Send", new Icon(VaadinIcon.PAPERPLANE));
-        btnSend.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        btnSend.addClickShortcut(Key.ENTER);
-        btnSend.addClickListener(click -> {
-            if (!isUploading) request = messageField.getValue();
-            
-            processRequest();
-            messageField.clear();
-            messageField.focus();
-        });
-
-        Button btnClear = new Button(" ", new Icon(VaadinIcon.TRASH));
-        btnClear.addClassName("main-layout__btnDefaults");
-        btnClear.addClickListener(click -> {
-            Notification notif = new Notification("Please choose an action", 5000, Position.BOTTOM_END);
-            Button clearText = new Button("Clear text", event->{
-                messageLayout.removeAll();
-                notif.close();
-            });
-            Button restart = new Button("Restart", event->{
-                notif.close();
-                UI.getCurrent().getPage().reload();
-            });
-            restart.addThemeVariants(ButtonVariant.LUMO_ICON);
-            notif.add(clearText, restart);
-            notif.open();
-        });
-        inputLayout.add(btnSend, btnClear);
     }
 
     private void processRequest() {
@@ -137,8 +109,8 @@ public class MainLayout extends VerticalLayout {
             if (component != null){ 
                 messageLayout.add(new Bubble(".", component));
             }else {
-                if (engine.getResponse() != null && !engine.getResponse().isEmpty()) 
-                messageLayout.add(new Bubble(".", engine.getResponse()));
+                if (engine.getResponse() != null && !engine.getResponse().getDisplay().isEmpty()) 
+                messageLayout.add(new Bubble(".", engine.getResponse().getDisplay()));
             }
             
         } else {
@@ -146,83 +118,11 @@ public class MainLayout extends VerticalLayout {
             engine.processRequest(requestid, sequenceID, request, paramBuilder.toString());
             if(component != null) messageLayout.add(new Bubble(engine.getUsername(), component));
             isUploading = false;
-            if (engine.getResponse() != null && !engine.getResponse().isEmpty()) 
-                messageLayout.add(new Bubble(".", engine.getResponse()));
+            if (engine.getResponse() != null && !engine.getResponse().getDisplay().isEmpty()) 
+                messageLayout.add(new Bubble(".", engine.getResponse().getDisplay()));
         }
         
-        reloadInputLayout(nextRequestID);
-    }
-
-    private void reloadInputLayout(int parent_reqid) {
-        inputLayout.removeAll();
-        isUploading = false;
-        TriceraSQLUtils util = new TriceraSQLUtils();
-        // Load initial display, if any
-        for(Request req : util.getRequestTableByRequestID(parent_reqid)){
-            response = (req.getInit_display() != null) ? req.getInit_display() : "";
-            System.out.println("MainLayout.reloadInputLayout() : response = " + response);
-            if (!response.isEmpty()) messageLayout.add(new Bubble(".", response));
-        }
-        
-        Div generatedButtons = new Div();
-        for(Response resp : util.getResponseTableByRequestID(parent_reqid)){
-            System.out.println("### MainLayout.reloadInputLayout() : " + resp.toString());
-            requestid = resp.getParent_reqid();
-            nextRequestID = resp.getNext_reqid();
-            sequenceID = resp.getSeq();
-
-            // check if special component
-            if (sequenceID < 0) {
-                if (sequenceID == TriceraConstants.SEQ_TEXTFIELD){
-                    System.out.println("textfield generated from " + resp.getParent_reqid() + " with next reqid = " + nextRequestID);
-                    messageField = new TextField();
-                    messageField.setClearButtonVisible(true);
-                    messageField.setWidth("100%");
-                    messageField.setAutofocus(true);
-                    inputLayout.add(messageField);
-                } else if (sequenceID == TriceraConstants.SEQ_UPLOAD){
-                    Div output = new Div();
-    
-                    MemoryBuffer buffer = new MemoryBuffer();
-                    Upload upload = new Upload(buffer);
-                    request = "";
-    
-                    upload.addSucceededListener(event -> {
-                        TriceraFileReader tfr = new TriceraFileReader();
-                        component = tfr.createComponent(event.getMIMEType(), event.getFileName(), buffer.getInputStream());
-                        uploadDoc = tfr.getDocument();
-                        showOutput(event.getFileName(), component, output);
-                        isUploading = true;
-                        request += "File: " + event.getFileName() + " \n ";
-                        
-                    });
-                    inputLayout.add(upload);
-    
-                } else if (sequenceID == TriceraConstants.SEQ_REPORT_BTN){
-                    System.out.println("Button generated from " + resp.getParent_reqid() + " with next reqid = " + nextRequestID);
-                    generatedButtons.add(createAutoReplyButton(resp.getDisplay(), nextRequestID, sequenceID));
-                }
-            } else {
-                generatedButtons.add(createAutoReplyButton(resp.getDisplay(), nextRequestID, sequenceID));
-            }
-
-        }
-
-        inputLayout.add(generatedButtons);
-        inputLayout.expand(generatedButtons);
-        addDefaultInputComponents(); // + send and clear buttons
-    }
-
-    private Button createAutoReplyButton(String displayText, int reqid, int seqid) {
-        Button autoReply = new Button(displayText);
-        autoReply.addClassName("main-layout__autobtn");
-        autoReply.addClickListener(click -> {
-            request = displayText;
-            nextRequestID = reqid;
-            sequenceID = seqid;
-            processRequest();
-        });
-        return autoReply;
+        tricom.reloadInputLayout(nextRequestID);
     }
 
     private void showOutput(String text, Component content, HasComponents outputContainer) {

@@ -131,4 +131,10 @@ public class Response {
                 + ", stored_proc=" + stored_proc + "]";
     }
 
+    public Response(String display, int seq, int next_reqid) {
+        this.seq = seq;
+        this.display = display;
+        this.next_reqid = next_reqid;
+    }
+
 }
