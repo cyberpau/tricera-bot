@@ -18,8 +18,8 @@ public class TriceraConstants {
     // component types based from [seq] columns. Greater than 0 are buttons.
     public static final int SEQ_TEXTFIELD = -1;
     public static final int SEQ_UPLOAD = -2;
-    public static final int SEQ_REPORT_BTN = -3;
     public static final int SEQ_SQL_TEXTFIELD = -4;
+    public static final int SEQ_MIN_REPORT_BTN = -10;
 
     // request / response types
     public static final int RESPONSE_TYPE_STRING = 0;

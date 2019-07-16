@@ -160,13 +160,13 @@ public class MainLayout extends VerticalLayout {
         // Load initial display, if any
         for(Request req : util.getRequestTableByRequestID(parent_reqid)){
             response = (req.getInit_display() != null) ? req.getInit_display() : "";
-            System.out.println("MainLayout.reloadInputLayout() : response = " + response);
+            //System.out.println("MainLayout.reloadInputLayout() : response = " + response);
             if (!response.isEmpty()) messageLayout.add(new Bubble(".", response));
         }
         
         Div generatedButtons = new Div();
         for(Response resp : util.getResponseTableByRequestID(parent_reqid)){
-            System.out.println("### MainLayout.reloadInputLayout() : " + resp.toString());
+            //System.out.println("### MainLayout.reloadInputLayout() : " + resp.toString());
             requestid = resp.getParent_reqid();
             nextRequestID = resp.getNext_reqid();
             sequenceID = resp.getSeq();
@@ -174,7 +174,7 @@ public class MainLayout extends VerticalLayout {
             // check if special component
             if (sequenceID < 0) {
                 if (sequenceID == TriceraConstants.SEQ_TEXTFIELD){
-                    System.out.println("textfield generated from " + resp.getParent_reqid() + " with next reqid = " + nextRequestID);
+                    //System.out.println("textfield generated from " + resp.getParent_reqid() + " with next reqid = " + nextRequestID);
                     messageField = new TextField();
                     messageField.setClearButtonVisible(true);
                     messageField.setWidth("100%");
@@ -198,8 +198,8 @@ public class MainLayout extends VerticalLayout {
                     });
                     inputLayout.add(upload);
     
-                } else if (sequenceID == TriceraConstants.SEQ_REPORT_BTN){
-                    System.out.println("Button generated from " + resp.getParent_reqid() + " with next reqid = " + nextRequestID);
+                } else if (sequenceID <= TriceraConstants.SEQ_MIN_REPORT_BTN){
+                    //System.out.println("Button generated from " + resp.getParent_reqid() + " with next reqid = " + nextRequestID);
                     generatedButtons.add(createAutoReplyButton(resp.getDisplay(), nextRequestID, sequenceID));
                 }
             } else {
@@ -220,6 +220,7 @@ public class MainLayout extends VerticalLayout {
             request = displayText;
             nextRequestID = reqid;
             sequenceID = seqid;
+            System.out.println("Button clicked -> nextRequestID: " + nextRequestID + " request " + request);
             processRequest();
         });
         return autoReply;

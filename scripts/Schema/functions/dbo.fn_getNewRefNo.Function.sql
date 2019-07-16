@@ -50,6 +50,8 @@ BEGIN
 		SELECT @refno = 'DOC' + CAST(count(1) + @isNew as varchar)  + '-' + CONVERT(varchar, getdate(), 1)
 		FROM DOCUMENTS
 		WHERE upload_dt = GETDATE()
+	ELSE IF (@type = 'SEQ')
+		SELECT @refno = (count(1) + 10)*-1 FROM RESPONSE WHERE parent_reqid = 10
 
 	-- Return the result of the function
 	RETURN @refno
