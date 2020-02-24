@@ -19,3 +19,4 @@ The project can be imported into the IDE of your choice, with Java 8 installed, 
 
 ## Sample deployed on AWS:
 http://tricerabot-env.eqeixe36nr.us-east-2.elasticbeanstalk.com/
+EDIT: Due to budget restrictions, I decided to cut off sample deployed tricerabot on AWS.
